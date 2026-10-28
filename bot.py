@@ -5,15 +5,12 @@ import requests
 
 TOKEN = os.environ.get("TELEGRAM_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1txIZgQFE0LMJi1WBs4cS-GejUyBETAyo/export?format=xlsx"
 
 def get_schedule_for_today():
     try:
-
         response = requests.get(SPREADSHEET_URL)
         response.raise_for_status()
-        
         df = pd.read_excel(response.content, sheet_name="2026-2027", header=None)
     except Exception as e:
         return f"❌ Ошибка при скачивании или чтении таблицы: {e}"
@@ -33,7 +30,6 @@ def get_schedule_for_today():
     }
     
     target_day = days_map.get(today_index)
-  
     current_day_found = False
     schedule_lines = []
     
@@ -48,13 +44,16 @@ def get_schedule_for_today():
                 
         if current_day_found:
             time_slot = str(row.iloc[1]).strip()
-            group_col_a = str(row.iloc[3]).strip() if pd.notna(row.iloc[3]) else ""
-            group_col_b = str(row.iloc[4]).strip() if pd.notna(row.iloc[4]) else ""
-     
-            if time_slot and time_slot != "nan" and (group_col_a or group_col_b):
-                subject = f"{group_col_a} {group_col_b}".strip()
-                if subject and subject != "nan":
-                    schedule_lines.append(f"• **{time_slot}** — {subject}")
+            
+            extra_info = []
+            for col_idx in [3, 4, 5, 6, 7]:
+                val = str(row.iloc[col_idx]).strip() if pd.notna(row.iloc[col_idx]) else ""
+                if val and val != "nan" and val not in extra_info:
+                    extra_info.append(val)
+
+            if time_slot and time_slot != "nan" and extra_info:
+                subject_info = " / ".join(extra_info)
+                schedule_lines.append(f"• **{time_slot}**\n  └ {subject_info}")
 
     if not schedule_lines:
         return f"📅 Сегодня ({target_day.capitalize()}), судя по таблице, пар у 2 группы нет или они не указаны."
@@ -74,10 +73,4 @@ def send_telegram_message(text):
     }
     
     response = requests.post(url, json=payload)
-    if response.status_code != 200:
-        raise Exception(f"Ошибка отправки: {response.text}")
-    print("Актуальное расписание успешно отправлено!")
-
-if __name__ == "__main__":
-    message = get_schedule_for_today()
-    send_telegram_message(message)
+    if response.status_code
