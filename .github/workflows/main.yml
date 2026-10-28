@@ -1,13 +1,12 @@
-name: Send Daily Schedule 2 Group
+name: Dynamic Schedule Parser Bot
 
 on:
   schedule:
-    # Запуск каждый день в 4:00 UTC (7:00 по МСК/Минску)
     - cron: '0 4 * * *'
-  workflow_dispatch: # Кнопка ручного запуска во вкладке Actions
+  workflow_dispatch:
 
 jobs:
-  send-schedule:
+  run-bot:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -20,11 +19,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      - name: Run bot script
+      - name: Run parser script
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           python bot.py
