@@ -73,4 +73,10 @@ def send_telegram_message(text):
     }
     
     response = requests.post(url, json=payload)
-    if response.status_code
+    if response.status_code != 200:
+        raise Exception(f"Ошибка отправки: {response.text}")
+    print("Расписание успешно отправлено!")
+
+if __name__ == "__main__":
+    message = get_schedule_for_today()
+    send_telegram_message(message)
